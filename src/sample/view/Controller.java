@@ -4,14 +4,12 @@ import javafx.animation.AnimationTimer;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.control.ColorPicker;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import sample.Main;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class Controller {
     @FXML
@@ -21,8 +19,8 @@ public class Controller {
     private int positionX;
     private int positionY;
     private int indexGridCell;
-    public static final int gridSize = 32;
-    public static final double cellSize = 20;
+    public static final int gridSize = 64;
+    public static final double cellSize = 8;
 
     public void setMain(Main main) {
         this.main = main;
@@ -41,16 +39,44 @@ public class Controller {
                 grid.add(cellPane, i, j);
             }
         }
-        grid.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (event.getClickCount() < 2)
-                    return;
-
-            }
-        });
         anchorPane.getChildren().add(grid);
         System.out.println(grid.getChildren().size());
+        grid.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                //paintTimer.start();
+                //System.out.println(event.getSceneX() + "\n" + event.getSceneY());
+                //positionX = (int) event.getSceneX();
+                //positionY = (int) event.getSceneY();
+                //paint(positionX,positionY);
+                double doubleX = event.getSceneX()/cellSize;
+                double doubleY = event.getSceneY()/cellSize;
+                positionX = (int) doubleX;
+                positionY = (int) doubleY;
+                paintTimer.start();
+            }
+        });
+
+        grid.setOnMouseReleased(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                paintTimer.stop();
+                //System.out.println(event.getSceneX() + "\n" + event.getSceneY());
+            }
+        });
+        grid.setOnMouseDragged(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                //System.out.println(event.getSceneX() + "\t" + event.getSceneY());
+                //positionX = (int) event.getSceneX();
+                //positionY = (int) event.getSceneY();
+                //System.out.println(x + "\t" + y);
+                double doubleX = event.getSceneX()/cellSize;
+                double doubleY = event.getSceneY()/cellSize;
+                positionX = (int) doubleX;
+                positionY = (int) doubleY;
+            }
+        });
     }
 
     public void flush() {
@@ -67,10 +93,29 @@ public class Controller {
     protected AnimationTimer timer = new AnimationTimer() {
         @Override
         public void handle(long now) {
-            //ukraineFlag();
-            clock();
+            ukraineFlag();
+            //clock();
         }
     };
+
+    protected AnimationTimer paintTimer = new AnimationTimer() {
+        @Override
+        public void handle(long now) {
+            paint(positionX,positionY,"black");
+        }
+    };
+
+    private void paint(int x, int y) {
+        paint(x, y, "yellow");
+    }
+
+    private void paint(int x, int y, String s) {
+        if (x == 0 || x == gridSize - 1 || y == 0 || y == gridSize - 1)
+            return;
+        int index = y + gridSize * x;
+        Node node = grid.getChildren().get(index);
+        node.setStyle("-fx-background-color: " + s);
+    }
 
     private void clock() {
         if (indexGridCell == grid.getChildren().size() - 1)
@@ -80,7 +125,6 @@ public class Controller {
         node.setStyle("-fx-background-color: yellow");
         node = grid.getChildren().get(grid.getChildren().size() - 1 - indexGridCell);
         node.setStyle("-fx-background-color: blue");
-
         positionY = indexGridCell - (positionX * gridSize);
         if (indexGridCell % gridSize == 0 && indexGridCell != 0)
             positionX++;
@@ -94,16 +138,14 @@ public class Controller {
         indexGridCell = positionY * gridSize + positionX;
         Node node = grid.getChildren().get(indexGridCell);
         node.setStyle("-fx-background-color: yellow");
-        node = grid.getChildren().get(grid.getChildren().size()-1-indexGridCell);
+        node = grid.getChildren().get(grid.getChildren().size() - 1 - indexGridCell);
         node.setStyle("-fx-background-color: blue");
         if (positionY < gridSize - 1) {
             positionY++;
-        }
-        else if (positionX < gridSize - 1) {
+        } else if (positionX < gridSize - 1) {
             positionY = 0;
             positionX++;
         }
-
     }
 
     public void start() {
@@ -143,7 +185,6 @@ public class Controller {
     }
 
     public void update() {
-
         Node node = grid.getChildren().get(positionY + positionX * gridSize);
         node.setStyle("-fx-background-color: red");
     }
